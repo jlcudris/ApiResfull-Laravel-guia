@@ -16,13 +16,15 @@ class User extends Authenticatable
     const USUARIO_ADMINISTRADOR='true';
     const USUARIO_REGULAR='false';
 
+    protected $table = 'users';
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password','verified','verification_token','admin'
+        'name', 'email', 'password','verified','verification_token','admin','remember_token'
     ];
 
     /**
@@ -39,9 +41,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+
 
     public function esVerificado(){
 
