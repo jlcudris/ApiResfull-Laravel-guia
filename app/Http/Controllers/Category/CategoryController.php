@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Category;
 
+use App\Category;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\apiController;
 
-class CategoryController extends Controller
+class CategoryController extends apiController
 {
     /**
      * Display a listing of the resource.
@@ -14,18 +15,14 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::all();
+
+        //return response()->json(['data'=>$categories],200);
+
+        return  $this->showAll($categories);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -35,7 +32,21 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = \Validator::make($request->all(), [
+            'name'=>'required|max:50',
+            'description'=>'required|max:500',
+
+
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->all(),400 );
+        }else{
+
+            $category =Category::create($request->all());
+
+            return $this->showOne($category,201);
+
+        }
     }
 
     /**
@@ -44,21 +55,14 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Category $category)
+
     {
-        //
+        return $this->showOne($category);
+
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
+
 
     /**
      * Update the specified resource in storage.
@@ -67,9 +71,22 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Category $category)
     {
-        //
+        $category->fill($request->only([
+            'name',
+            'description',
+
+        ]));
+
+        if($category->isClean()){
+
+            return $this->errorResponse('debes especificar al menos un valor diferente para actualizar',422);
+        }
+
+        $category->save();
+
+        return $this->showOne($category);
     }
 
     /**
@@ -78,8 +95,11 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Category $category)
     {
-        //
+        $category->delete();
+
+        return $this->showOne($category);
+
     }
 }

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\User;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\apiController;
 use App\User;
 
-class UserController extends Controller
+class UserController extends apiController
 {
     /**
      * Display a listing of the resource.
@@ -17,9 +17,11 @@ class UserController extends Controller
     {
         $usuarios = User::all();
 
-        return response()->json($usuarios ,200);
 
-        //return  count($usuarios);
+
+        //return response()->json(['data'=>$usuarios],200);
+
+        return  $this->showAll($usuarios);
     }
 
 
@@ -61,9 +63,9 @@ class UserController extends Controller
             ]);
 
             if($usuario){
-                return response()->json(['data'=>$usuario],200);
+                return $this->showOne($usuario);
             }else{
-                return response()->json(['error'=>'eroorr'],400);
+                return $this->errorResponse('no se pudo creaar el usuario',409);
             }
         }
 
@@ -77,8 +79,6 @@ class UserController extends Controller
         // $this->validate($request, $ruglas);
         // return 'hello';
 
-
-
     }
 
     /**
@@ -87,14 +87,12 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(User $user)
     {
-        $usuario = User::findOrFail($id);
+        //$usuario = User::findOrFail($id);
 
-        return response()->json(['data'=>(['user'=>$usuario,'caca'=>(['popo'=>'mañana','pelo'=>'toto','array'=>(['dentro'=>1,'dentro2'=>3])])]),],200);
+        return $this->showOne($user);
     }
-
-
 
     /**
      * Update the specified resource in storage.
@@ -103,23 +101,27 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request,User $user)
     {
-        $user = User::findOrFail($id);
 
+        //  $user = User::findOrFail($id);
 
         $validator = \Validator::make($request->all(), [
             'admin'=>'in:' .User::USUARIO_ADMINISTRADOR . ',' . User::USUARIO_REGULAR,
             'email'=>'email|unique:users,email,'.$user->id,
             'password'=>'min:6|confirmed',
 
+
         ]);
         if ($validator->fails()) {
             return response()->json($errors=$validator->errors()->all(),400 );
         }else{
 
-            if($request->has('name')){
-                $user->name =$request->name;
+
+            if($request->has('nombre')){
+
+                $user->name =$request->nombre;
+
             }
 
             if($request->has('email') && $user->email != $request->email){
@@ -136,7 +138,7 @@ class UserController extends Controller
             if($request->has('admin')){
                 if(!$user->esVerificado()){
 
-                    return response()->json(['error'=>'unicamente los usuarios verificados pueden cambiar su valor administrador', 'code'=>409],409);
+                    return  $this->errorResponse('unicamente los usuarios verificados pueden cambiar su valor administrador',409);
                 }
 
                 $user->admin =$request->admin;
@@ -144,12 +146,14 @@ class UserController extends Controller
             }
 
             if(!$user->isDirty()){
-                return response()->json(['error'=>'se debe especificar al menos un valor diferente paea actualizar', 'code'=>422],422);
+
+                return  $this->errorResponse('se debe especificar al menos un valor diferente paea actualizar',422);
+
             }
 
-            $user->save();
+            $user->update();
 
-            return response()->json(['date'=>$user],200);
+            return $this->showOne($user);
         }
     }
 
@@ -159,13 +163,13 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::findOrfail($id);
+        //$user = User::findOrfail($id);
 
         $user->delete();
 
-        return response()->json(['date'=>'hemos eliminado el usuario de forma correcta','user'=>$user],200);
+         return $this->showOne($user);
 
     }
 }
